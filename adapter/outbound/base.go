@@ -85,14 +85,15 @@ func (b *Base) SupportUDP() bool {
 	return b.udp
 }
 
-// SupportXUDP implements C.ProxyAdapter
-func (b *Base) SupportXUDP() bool {
-	return b.xudp
-}
-
-// SupportTFO implements C.ProxyAdapter
-func (b *Base) SupportTFO() bool {
-	return b.tfo
+// ProxyInfo implements C.ProxyAdapter
+func (b *Base) ProxyInfo() (info C.ProxyInfo) {
+	info.XUDP = b.xudp
+	info.TFO = b.tfo
+	info.MPTCP = b.mpTcp
+	info.SMUX = false
+	info.Interface = b.iface
+	info.RoutingMark = b.rmark
+	return
 }
 
 // IsL3Protocol implements C.ProxyAdapter
@@ -152,11 +153,11 @@ func (b *Base) DialOptions(opts ...dialer.Option) []dialer.Option {
 }
 
 type BasicOption struct {
-	TFO         bool   `proxy:"tfo,omitempty" group:"tfo,omitempty"`
-	MPTCP       bool   `proxy:"mptcp,omitempty" group:"mptcp,omitempty"`
+	TFO         bool   `proxy:"tfo,omitempty"`
+	MPTCP       bool   `proxy:"mptcp,omitempty"`
 	Interface   string `proxy:"interface-name,omitempty" group:"interface-name,omitempty"`
 	RoutingMark int    `proxy:"routing-mark,omitempty" group:"routing-mark,omitempty"`
-	IPVersion   string `proxy:"ip-version,omitempty" group:"ip-version,omitempty"`
+	IPVersion   string `proxy:"ip-version,omitempty"`
 	DialerProxy string `proxy:"dialer-proxy,omitempty"` // don't apply this option into groups, but can set a group name in a proxy
 }
 

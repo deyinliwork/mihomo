@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/metacubex/mihomo/adapter/inbound"
-	N "github.com/metacubex/mihomo/common/net"
 	"github.com/metacubex/mihomo/common/sockopt"
 	C "github.com/metacubex/mihomo/constant"
 	LC "github.com/metacubex/mihomo/listener/config"
@@ -72,7 +71,7 @@ func New(config LC.ShadowsocksServer, tunnel C.Tunnel, additions ...inbound.Addi
 		sl.service, err = shadowaead_2022.NewServiceWithPassword(config.Cipher, config.Password, udpTimeout, h, ntp.Now)
 	default:
 		err = fmt.Errorf("shadowsocks: unsupported method: %s", config.Cipher)
-		return embedSS.New(config, tunnel)
+		return embedSS.New(config, tunnel, additions...)
 	}
 	if err != nil {
 		return nil, err
@@ -83,13 +82,12 @@ func New(config LC.ShadowsocksServer, tunnel C.Tunnel, additions ...inbound.Addi
 
 		if config.Udp {
 			//UDP
-			ul, err := net.ListenPacket("udp", addr)
+			ul, err := inbound.ListenPacket("udp", addr)
 			if err != nil {
 				return nil, err
 			}
 
-			err = sockopt.UDPReuseaddr(ul.(*net.UDPConn))
-			if err != nil {
+			if err := sockopt.UDPReuseaddr(ul); err != nil {
 				log.Warnln("Failed to Reuse UDP Address: %s", err)
 			}
 
@@ -153,7 +151,6 @@ func New(config LC.ShadowsocksServer, tunnel C.Tunnel, additions ...inbound.Addi
 					}
 					continue
 				}
-				N.TCPKeepAlive(c)
 
 				go sl.HandleConn(c, tunnel)
 			}
